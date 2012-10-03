@@ -16,5 +16,10 @@
     "pool"
   ],
   "author": "Mike D Pilsbury",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "tedious": "0.0.7",
+    "mocha": "1.6.0"
+  },
+  "licenses": "MIT"
 }
