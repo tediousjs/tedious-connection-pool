@@ -1,0 +1,20 @@
+{
+  "name": "tedious-connection-pool",
+  "version": "0.0.1",
+  "description": "Connection Pool for tedious.",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/pekim/tedious-connection-pool.git"
+  },
+  "keywords": [
+    "tedious",
+    "connection",
+    "pool"
+  ],
+  "author": "Mike D Pilsbury",
+  "license": "MIT"
+}
