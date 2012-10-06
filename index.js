@@ -23,18 +23,34 @@ function ConnectionPool(poolConfig, connectionConfig) {
   pool.config = poolConfig;
   pool.inUseConnections = [];
   pool.availableConnections = [];
+  pool.pendingConnectionRequests = [];
 
   pool.connectionAvailable = function(connection) {
     this.inUseConnections.splice(this.inUseConnections.indexOf(connection), 1);
   };
 
   pool.requestConnection = function(callback) {
-    var connection = new PooledConnection(pool, connectionConfig);
-    pool.inUseConnections.push(connection);
+    var connection;
 
-    process.nextTick(function() {
-      callback(connection);
-    });
+    if (pool.availableConnections.length > 1) {
+      connection = availableConnections.shift();
+    } else if (pool.inUseConnections.length < pool.config.maxSize) {
+      connection = new PooledConnection(pool, connectionConfig);
+    }
+
+    if (connection) {
+      useConnection(connection);
+    } else {
+      pool.pendingConnectionRequests.push(useConnection);
+    }
+
+    function useConnection(connection) {
+      pool.inUseConnections.push(connection);
+
+      process.nextTick(function() {
+        callback(connection);
+      });
+    }
   };
 
   return {

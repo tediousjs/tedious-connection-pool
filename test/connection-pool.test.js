@@ -11,63 +11,46 @@ var connectionConfig = {
 
 describe('ConnectionPool', function() {
   describe('one connection', function() {
-    var poolSize = 1;
+    var poolConfig = {maxSize: 1};
 
     it('should connect, and end', function(done) {
-      var pool = new ConnectionPool({maxSize: poolSize}, connectionConfig);
-
-      requestConnectionAndClose(pool, function() {
-        done();
-      });
+      testPool(poolConfig, poolConfig.maxSize, requestConnectionAndClose, done);
     });
 
     it('should connect, select, and end', function(done) {
-      var pool = new ConnectionPool({maxSize: poolSize}, connectionConfig);
-
-      requestConnectionSelectAndClose(pool, function() {
-        done();
-      });
+      testPool(poolConfig, poolConfig.maxSize, requestConnectionSelectAndClose, done);
     });
   });
 
   describe('multiple connections within pool maxSize', function() {
-    var poolSize = 5;
+    var poolConfig = {maxSize: 5};
 
     it('should connect, and end', function(done) {
-      var pool = new ConnectionPool({maxSize: poolSize}, connectionConfig);
-
-      function doIt(done) {
-        requestConnectionAndClose(pool, function() {
-          done();
-        });
-      }
-
-      var functions = [];
-      for (var f = 0; f < poolSize; f++) {
-        functions.push(doIt);
-      }
-
-      async.parallel(functions, done);
+      testPool(poolConfig, poolConfig.maxSize, requestConnectionAndClose, done);
     });
 
     it('should connect, select, and end', function(done) {
-      var pool = new ConnectionPool({maxSize: poolSize}, connectionConfig);
-
-      function doIt(done) {
-        requestConnectionSelectAndClose(pool, function() {
-          done();
-        });
-      }
-
-      var functions = [];
-      for (var f = 0; f < poolSize; f++) {
-        functions.push(doIt);
-      }
-
-      async.parallel(functions, done);
+      testPool(poolConfig, poolConfig.maxSize, requestConnectionSelectAndClose, done);
     });
   });
 });
+
+function testPool(poolConfig, numberOfConnectionsToUse, useConnectionfunction, done) {
+  var pool = new ConnectionPool(poolConfig, connectionConfig);
+
+  function doIt(done) {
+    useConnectionfunction(pool, function() {
+      done();
+    });
+  }
+
+  var functions = [];
+  for (var f = 0; f < numberOfConnectionsToUse; f++) {
+    functions.push(doIt);
+  }
+
+  async.parallel(functions, done);
+}
 
 function requestConnectionAndClose(pool, done) {
   pool.requestConnection(function (connection) {
