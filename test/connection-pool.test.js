@@ -9,28 +9,17 @@ var connectionConfig = {
 
 describe('ConnectionPool', function() {
   describe('one connection', function() {
-    it('should connect', function(done) {
+    it('should connect and end', function(done) {
+      var cp = new ConnectionPool({maxSize: 2}, connectionConfig);
 
-      // var connection = new Connection(connectionConfig);
+      cp.requestConnection(function (connection) {
+        connection.on('connect', function(err) {
+          connection.close();
+        });
 
-      // connection.on('connect', function(err) {
-      //   done();
-      // });
-
-      var cp = new ConnectionPool({size: 2}, connectionConfig);
-      var Connection = cp.Connection;
-      //var connection = cp.getConnection();
-      var connection = new Connection();
-      //console.log(connection.pool);
-
-      connection.on('connect', function(err) {
-        connection.close();
-        // done();
-      });
-
-      connection.on('end', function(err) {
-        // console.log('end')
-        done();
+        connection.on('end', function(err) {
+          done();
+        });
       });
     })
   })

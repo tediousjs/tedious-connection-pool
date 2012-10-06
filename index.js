@@ -21,20 +21,22 @@ function ConnectionPool(poolConfig, connectionConfig) {
   var pool = this;
 
   pool.config = poolConfig;
-  pool.activeConnections = [];
+  pool.inUseConnections = [];
   pool.availableConnections = [];
 
   pool.connectionAvailable = function(connection) {
-    this.activeConnections.splice(this.activeConnections.indexOf(connection), 1);
+    this.inUseConnections.splice(this.inUseConnections.indexOf(connection), 1);
+  };
+
+  pool.requestConnection = function(callback) {
+    var connection = new PooledConnection(pool, connectionConfig);
+    pool.inUseConnections.push(connection);
+
+    callback(connection);
   };
 
   return {
-    Connection: function() {
-      var connection = new PooledConnection(pool, connectionConfig);
-      pool.activeConnections.push(connection);
-
-      return connection;
-    }
+    requestConnection: pool.requestConnection
   };
 };
 
