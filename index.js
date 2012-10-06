@@ -32,7 +32,9 @@ function ConnectionPool(poolConfig, connectionConfig) {
     var connection = new PooledConnection(pool, connectionConfig);
     pool.inUseConnections.push(connection);
 
-    callback(connection);
+    process.nextTick(function() {
+      callback(connection);
+    });
   };
 
   return {
