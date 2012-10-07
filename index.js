@@ -36,7 +36,8 @@ function ConnectionPool(poolConfig, connectionConfig) {
   pool.requestNumber = 0;
   pool.stats = {
     maxSize: poolConfig.maxSize,
-    connections: 0
+    connections: 0,
+    connectionsInUse: 0
   };
   pool.inUseConnections = [];
   pool.availableConnections = [];
@@ -48,6 +49,7 @@ function ConnectionPool(poolConfig, connectionConfig) {
     });
 
     pool.inUseConnections.splice(pool.inUseConnections.indexOf(connection), 1);
+    pool.stats.connectionsInUse--;
 
     if (pool.pendingConnectionRequests.length > 0) {
       var pendingConnectionRequest = pool.pendingConnectionRequests.shift();
@@ -79,13 +81,15 @@ function ConnectionPool(poolConfig, connectionConfig) {
 
     function useConnection(connection) {
       pool.inUseConnections.push(connection);
+      pool.stats.connectionsInUse++;
 
       callback(connection);
     }
   };
 
   return {
-    requestConnection: pool.requestConnection
+    requestConnection: pool.requestConnection,
+    stats: pool.stats
   };
 };
 
