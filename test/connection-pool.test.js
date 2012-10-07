@@ -75,7 +75,9 @@ function testPool(poolConfig, numberOfConnectionsToUse, useConnectionFunction, d
 }
 
 function requestConnectionAndClose(pool, done) {
-  pool.requestConnection(function (connection) {
+  pool.requestConnection(function (err, connection) {
+    assert.ok(!err);
+
     connection.on('connect', function(err) {
       connection.close();
     });
@@ -87,18 +89,20 @@ function requestConnectionAndClose(pool, done) {
 }
 
 function requestConnectionSelectAndClose(pool, done) {
-  pool.requestConnection(function (connection) {
+  pool.requestConnection(function (err, connection) {
+    assert.ok(!err);
+
     var request = new Request('select 42', function(err, rowCount) {
-        assert.strictEqual(rowCount, 1)
-        connection.close()
+        assert.strictEqual(rowCount, 1);
+        connection.close();
     });
 
     request.on('row', function(columns) {
-        assert.strictEqual(columns[0].value, 42)
+        assert.strictEqual(columns[0].value, 42);
     });
 
     connection.on('connect', function(err) {
-      connection.execSql(request)
+      connection.execSql(request);
     });
 
     connection.on('end', function(err) {
