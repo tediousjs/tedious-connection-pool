@@ -1,6 +1,8 @@
 # tedious-connection-pool
 A simple connection pool for [tedious](http://github.com/pekim/tedious).
 
+    Status: Experimental
+
 ## Example
 The only difference from the regular tedious API is how the connection is obtained.
 Once a Connection object has been acquired, the tedious API can be used with the
