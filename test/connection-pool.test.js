@@ -7,6 +7,14 @@ var connectionConfig = {
   userName: 'test',
   password: 'test',
   server: '192.168.1.212',
+  // options: {
+  //   debug: {
+  //     packet: true,
+  //     data: true,
+  //     payload: true,
+  //     token: true
+  //   }
+  // }
 };
 
 describe('ConnectionPool', function() {
@@ -24,22 +32,36 @@ describe('ConnectionPool', function() {
 
   describe('multiple connections within pool maxSize', function() {
     var poolConfig = {maxSize: 5};
+    var numberOfConnectionsToUse = poolConfig.maxSize;
 
     it('should connect, and end', function(done) {
-      testPool(poolConfig, poolConfig.maxSize, requestConnectionAndClose, done);
+      testPool(poolConfig, numberOfConnectionsToUse, requestConnectionAndClose, done);
     });
 
     it('should connect, select, and end', function(done) {
-      testPool(poolConfig, poolConfig.maxSize, requestConnectionSelectAndClose, done);
+      testPool(poolConfig, numberOfConnectionsToUse, requestConnectionSelectAndClose, done);
+    });
+  });
+
+  describe('connections exceed pool maxSize', function() {
+    var poolConfig = {maxSize: 5};
+    var numberOfConnectionsToUse = 20;
+
+    it('should connect, and end', function(done) {
+      testPool(poolConfig, numberOfConnectionsToUse, requestConnectionAndClose, done);
+    });
+
+    it('should connect, select, and end', function(done) {
+      testPool(poolConfig, numberOfConnectionsToUse, requestConnectionSelectAndClose, done);
     });
   });
 });
 
-function testPool(poolConfig, numberOfConnectionsToUse, useConnectionfunction, done) {
+function testPool(poolConfig, numberOfConnectionsToUse, useConnectionFunction, done) {
   var pool = new ConnectionPool(poolConfig, connectionConfig);
 
   function doIt(done) {
-    useConnectionfunction(pool, function() {
+    useConnectionFunction(pool, function() {
       done();
     });
   }
@@ -61,7 +83,7 @@ function requestConnectionAndClose(pool, done) {
     connection.on('end', function(err) {
       done();
     });
-  });
+  } );
 }
 
 function requestConnectionSelectAndClose(pool, done) {
