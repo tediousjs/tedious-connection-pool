@@ -1,6 +1,6 @@
 var assert = require('assert')
 var async = require('async')
-var ConnectionPool = require('../index');
+var ConnectionPool = require('../lib/connection-pool');
 var Request = require('tedious').Request;
 
 var connectionConfig = {
