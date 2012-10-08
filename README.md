@@ -13,7 +13,7 @@ var ConnectionPool = require('tedious-connection-pool');
 
 var pool = new ConnectionPool(poolConfig, connectionConfig);
 
-pool.requestConnection(function (error, connection) {
+pool.requestConnection(function (err, connection) {
   if(!err) {
     var request = new Request('select 42', function(err, rowCount) {
       assert.strictEqual(rowCount, 1);
