@@ -13,21 +13,23 @@ var ConnectionPool = require('tedious-connection-pool');
 
 var pool = new ConnectionPool(poolConfig, connectionConfig);
 
-pool.requestConnection(function (connection) {
-  var request = new Request('select 42', function(err, rowCount) {
-    assert.strictEqual(rowCount, 1);
+pool.requestConnection(function (error, connection) {
+  if(!err) {
+    var request = new Request('select 42', function(err, rowCount) {
+      assert.strictEqual(rowCount, 1);
     
-    // Release the connection back to the pool.
-    connection.close();
-  });
+      // Release the connection back to the pool.
+      connection.close();
+    });
 
-  request.on('row', function(columns) {
-    assert.strictEqual(columns[0].value, 42);
-  });
+    request.on('row', function(columns) {
+      assert.strictEqual(columns[0].value, 42);
+    });
 
-  connection.on('connect', function(err) {
-    connection.execSql(request);
-  });
+    connection.on('connect', function(err) {
+      connection.execSql(request);
+    });
+  }
 });
 ```
 
