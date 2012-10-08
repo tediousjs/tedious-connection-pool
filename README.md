@@ -39,8 +39,10 @@ It is then available to be reused.
 ### new ConnectionPool(poolConfig, connectionConfig)
 
 * `poolConfig` {Object}
-  * `maxSize` {Number} The maximum number of connections there can be in the pool.
-    Default = `10`
+  * `max` {Number} The maximum number of connections there can be in the pool. Default = `10`
+  * `min` {Number} The minimun of connections there can be in the pool. Default = `0`
+  * `idleTimeoutMillis` {Number} The Number of milliseconds before closing an unused connection. Default = `30000`
+  
 * `connectionConfig` {Object} The same configuration that would be used to [create a
   tedious Connection](http://pekim.github.com/tedious/api-connection.html#function_newConnection).
 
