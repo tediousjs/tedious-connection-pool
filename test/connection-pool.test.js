@@ -19,20 +19,20 @@ var connectionConfig = {
 
 describe('ConnectionPool', function() {
   describe('one connection', function() {
-    var poolConfig = {maxSize: 1};
+    var poolConfig = {max: 1, log: false};
 
     it('should connect, and end', function(done) {
-      testPool(poolConfig, poolConfig.maxSize, requestConnectionAndClose, done);
+      testPool(poolConfig, poolConfig.max, requestConnectionAndClose, done);
     });
 
     it('should connect, select, and end', function(done) {
-      testPool(poolConfig, poolConfig.maxSize, requestConnectionSelectAndClose, done);
+      testPool(poolConfig, poolConfig.max, requestConnectionSelectAndClose, done);
     });
   });
 
   describe('multiple connections within pool maxSize', function() {
-    var poolConfig = {maxSize: 5};
-    var numberOfConnectionsToUse = poolConfig.maxSize;
+    var poolConfig = {max: 5, log: false};
+    var numberOfConnectionsToUse = poolConfig.max;
 
     it('should connect, and end', function(done) {
       testPool(poolConfig, numberOfConnectionsToUse, requestConnectionAndClose, done);
@@ -44,7 +44,7 @@ describe('ConnectionPool', function() {
   });
 
   describe('connections exceed pool maxSize', function() {
-    var poolConfig = {maxSize: 5};
+    var poolConfig = {max: 5, log: false};
     var numberOfConnectionsToUse = 20;
 
     it('should connect, and end', function(done) {
@@ -71,7 +71,11 @@ function testPool(poolConfig, numberOfConnectionsToUse, useConnectionFunction, d
     functions.push(doIt);
   }
 
-  async.parallel(functions, done);
+  async.parallel(functions, function() {
+    pool.drain(function() {
+      done();
+    });
+  });
 }
 
 function requestConnectionAndClose(pool, done) {
@@ -85,7 +89,7 @@ function requestConnectionAndClose(pool, done) {
     connection.on('end', function(err) {
       done();
     });
-  } );
+  });
 }
 
 function requestConnectionSelectAndClose(pool, done) {
