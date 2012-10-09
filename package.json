@@ -1,4 +1,4 @@
-{
+  {
   "name": "tedious-connection-pool",
   "version": "0.0.1",
   "description": "Connection Pool for tedious.",
@@ -19,6 +19,12 @@
     "pool"
   ],
   "author": "Mike D Pilsbury",
+  "contributors": [
+    {
+      "name": "e11137",
+      "email": "rogelio.canedo@gmail.com"
+    }
+  ],
   "license": "MIT",
   "devDependencies": {
     "tedious": "0.0.7",
