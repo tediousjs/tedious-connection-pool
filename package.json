@@ -1,10 +1,10 @@
-  {
+{
   "name": "tedious-connection-pool",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Connection Pool for tedious.",
   "main": "lib/connection-pool.js",
-  "dependencies" : {
-    "generic-pool":"2.0.1"
+  "dependencies": {
+    "generic-pool": "2.0.1"
   },
   "scripts": {
     "test": "test"
