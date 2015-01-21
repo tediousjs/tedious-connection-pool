@@ -45,6 +45,38 @@ describe('ConnectionPool', function () {
         }, 4);
     });
 
+    it('min=0', function (done) {
+        this.timeout(10000);
+
+        var poolConfig = {min: 0, idleTimeout: 10};
+        var pool = new ConnectionPool(poolConfig, connectionConfig);
+
+        setTimeout(function() {
+            assert.equal(pool.connections.length, 0);
+        }, 4);
+
+        setTimeout(function() {
+            pool.acquire(function(err, connection) {
+                assert(!err);
+
+                var request = new Request('select 42', function (err, rowCount) {
+                    assert.strictEqual(rowCount, 1);
+                    connection.release();
+                    setTimeout(function () {
+                        assert.equal(pool.connections.length, 0);
+                        pool.drain(done);
+                    }, 200);
+                });
+
+                request.on('row', function (columns) {
+                    assert.strictEqual(columns[0].value, 42);
+                });
+
+                connection.execSql(request);
+            });
+        }, 2000);
+    });
+
     it('max', function (done) {
         this.timeout(10000);
 
@@ -207,7 +239,6 @@ describe('ConnectionPool', function () {
 
         var poolConfig = {max: 1};
         var pool = new ConnectionPool(poolConfig, connectionConfig);
-
 
         var createRequest = function(query, value, callback) {
             var request = new Request(query, function (err, rowCount) {

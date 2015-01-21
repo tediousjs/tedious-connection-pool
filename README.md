@@ -61,7 +61,7 @@ pool.on('error', function(err) {
 
 When you are finished with the pool, you can drain it (close all connections).
 ```javascript
-pool.drain(); //drain the pool when finished using it
+pool.drain();
 ```
 
 
@@ -99,6 +99,9 @@ The following method is added to the Tedious [Connection](http://pekim.github.co
 
 ### Connection.release()
 Release the connect back to the pool to be used again
+
+## Version 0.3.4 Changes
+* `poolConfig` option `min` supports being set to 0
 
 ## Version 0.3.3 Changes
 * Ignore calls to connection.release() on a connection that has been closed or not part of the connection pool.
