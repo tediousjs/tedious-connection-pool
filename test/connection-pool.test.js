@@ -134,7 +134,7 @@ describe('ConnectionPool', function () {
                     assert.strictEqual(rowCount, 1);
                     connection.release();
                     setTimeout(function () {
-                        assert.equal(pool.connections.length, 0);
+                        assert.equal(pool.connections.length, 1);
                         pool.drain(done);
                     }, 200);
                 });
@@ -166,7 +166,7 @@ describe('ConnectionPool', function () {
                     assert.strictEqual(rowCount, 1);
                     connection.release();
                     setTimeout(function () {
-                        assert.equal(pool.connections.length, 0);
+                        assert.equal(pool.connections.length, 1);
                         pool.drain(done);
                     }, 200);
                 });
