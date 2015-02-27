@@ -116,6 +116,70 @@ describe('ConnectionPool', function () {
         }
     });
 
+    it('min<=max, min specified > max specified', function (done) {
+        this.timeout(10000);
+
+        var poolConfig = { min: 5, max: 1, idleTimeout: 10};
+        var pool = new ConnectionPool(poolConfig, connectionConfig);
+
+        setTimeout(function() {
+            assert.equal(pool.connections.length, 1);
+        }, 4);
+
+        setTimeout(function() {
+            pool.acquire(function(err, connection) {
+                assert(!err);
+
+                var request = new Request('select 42', function (err, rowCount) {
+                    assert.strictEqual(rowCount, 1);
+                    connection.release();
+                    setTimeout(function () {
+                        assert.equal(pool.connections.length, 1);
+                        pool.drain(done);
+                    }, 200);
+                });
+
+                request.on('row', function (columns) {
+                    assert.strictEqual(columns[0].value, 42);
+                });
+
+                connection.execSql(request);
+            });
+        }, 2000);
+    });
+
+    it('min<=max, no min specified', function (done) {
+        this.timeout(10000);
+
+        var poolConfig = {max: 1, idleTimeout: 10};
+        var pool = new ConnectionPool(poolConfig, connectionConfig);
+
+        setTimeout(function() {
+            assert.equal(pool.connections.length, 1);
+        }, 4);
+
+        setTimeout(function() {
+            pool.acquire(function(err, connection) {
+                assert(!err);
+
+                var request = new Request('select 42', function (err, rowCount) {
+                    assert.strictEqual(rowCount, 1);
+                    connection.release();
+                    setTimeout(function () {
+                        assert.equal(pool.connections.length, 1);
+                        pool.drain(done);
+                    }, 200);
+                });
+
+                request.on('row', function (columns) {
+                    assert.strictEqual(columns[0].value, 42);
+                });
+
+                connection.execSql(request);
+            });
+        }, 2000);
+    });
+
     it('pool error event', function (done) {
         var poolConfig = {min: 2, max: 5};
         var pool = new ConnectionPool(poolConfig, {});
