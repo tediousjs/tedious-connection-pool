@@ -100,6 +100,9 @@ The following method is added to the Tedious [Connection](http://pekim.github.co
 ### Connection.release()
 Release the connect back to the pool to be used again
 
+## Version 0.3.6 Changes
+* bug fix only
+
 ## Version 0.3.5 Changes
 * `poolConfig` option `min` is limited to less than `max`
 
