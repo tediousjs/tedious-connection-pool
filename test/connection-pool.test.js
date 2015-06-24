@@ -32,7 +32,6 @@ ALTER LOGIN test DISABLE
 */
 
 describe('ConnectionPool', function () {
-
     it('min', function (done) {
         this.timeout(10000);
 
@@ -181,8 +180,12 @@ describe('ConnectionPool', function () {
     });
 
     it('pool error event', function (done) {
-        var poolConfig = {min: 2, max: 5};
+        this.timeout(10000);
+        var poolConfig = {min: 3};
         var pool = new ConnectionPool(poolConfig, {});
+
+        pool.acquire(function() { });
+
         pool.on('error', function(err) {
             assert(!!err);
             pool.drain(done);
@@ -333,5 +336,19 @@ describe('ConnectionPool', function () {
                 });
             }));
         });
+    });
+
+    it('drain', function (done) {
+        this.timeout(10000);
+
+        var poolConfig = {min: 3};
+        var pool = new ConnectionPool(poolConfig, {});
+
+        pool.acquire(function() { });
+
+        setTimeout(function() {
+            assert.equal(pool.connections.length, poolConfig.min);
+            pool.drain(done);
+        }, 4);
     });
 });
