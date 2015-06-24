@@ -5,7 +5,7 @@ A connection pool for [tedious](http://github.com/pekim/tedious).
 
     npm install tedious-connection-pool
     
-##Description
+## Description
 The only difference from the regular tedious API is how the connection is obtained and released. Rather than creating a connection and then closing it when finished, acquire a connection from the pool and release it when finished. Releasing resets the connection and makes in available for another use.
 
 Once the Tedious Connection object has been acquired, the tedious API can be used with the connection as normal.
@@ -65,7 +65,7 @@ pool.drain();
 ```
 
 
-##Class: ConnectionPool
+## Class: ConnectionPool
 
 ### new ConnectionPool(poolConfig, connectionConfig)
 
@@ -94,7 +94,7 @@ Close all pooled connections and stop making new ones. The pool should be discar
 ### connectionPool.error {event}
 The 'error' event is emitted when a connection fails to connect to the SQL Server.
 
-##Class: Connection
+## Class: Connection
 The following method is added to the Tedious [Connection](http://pekim.github.com/tedious/api-connection.html) object.
 
 ### Connection.release()
