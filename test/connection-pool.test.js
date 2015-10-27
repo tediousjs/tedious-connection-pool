@@ -11,6 +11,7 @@ var connectionConfig = {
         database: 'test'
     }
 };
+
 /* create a db user with the correct permissions:
 CREATE DATABASE test
 CREATE LOGIN test WITH PASSWORD=N'test', DEFAULT_DATABASE=test, CHECK_POLICY=OFF
@@ -259,14 +260,14 @@ describe('ConnectionPool', function () {
         }, 300);
     });
 
-    it('lost connection handling', function (done) {
+    it('connection error handling', function (done) {
         this.timeout(10000);
         var poolConfig = {min: 1, max: 5};
+
         var pool = new ConnectionPool(poolConfig, connectionConfig);
 
         pool.on('error', function(err) {
             assert(err && err.name === 'ConnectionError');
-            pool.drain(done);
         });
 
         //This simulates a lost connections by creating a job that kills the current session and then deletesthe job.
@@ -290,7 +291,8 @@ describe('ConnectionPool', function () {
             'SELECT 42';
 
             var request = new Request(command, function (err, rowCount) {
-                assert(false);
+                assert(err);
+                pool.drain(done);
             });
 
             request.on('row', function (columns) {
@@ -342,7 +344,7 @@ describe('ConnectionPool', function () {
         this.timeout(10000);
 
         var poolConfig = {min: 3};
-        var pool = new ConnectionPool(poolConfig, {});
+        var pool = new ConnectionPool(poolConfig, connectionConfig);
 
         pool.acquire(function() { });
 

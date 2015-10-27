@@ -4,7 +4,7 @@
   "description": "Connection Pool for tedious.",
   "main": "lib/connection-pool.js",
   "scripts": {
-    "test": "test"
+    "test": "mocha test/naming.test.js && mocha test/connection-pool.test.js"
   },
   "repository": {
     "type": "git",
@@ -37,7 +37,7 @@
   ],
   "licenses": "MIT",
   "dependencies": {
-    "tedious": "^1.8.0"
+    "tedious": "^1.13.0"
   },
   "devDependencies": {
     "mocha": ">=1.6.0"
