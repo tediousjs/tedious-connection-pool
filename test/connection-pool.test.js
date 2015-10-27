@@ -1,12 +1,16 @@
 var assert = require('assert');
 var Request = require('tedious').Request;
-var fs = require('fs');
 var ConnectionPool = require('../lib/connection-pool');
 
-function getConfig() {
-    var config = JSON.parse(fs.readFileSync(process.env.HOME + '/.tedious/test-connection-pool.json', 'utf8')).config;
-    return config;
-}
+var connectionConfig = {
+    userName: 'test',
+    password: 'test',
+    server: 'dev1',
+    options: {
+        appName: 'pool-test',
+        database: 'test'
+    }
+};
 
 /* create a db user with the correct permissions:
 CREATE DATABASE test
@@ -33,7 +37,7 @@ describe('ConnectionPool', function () {
         this.timeout(10000);
 
         var poolConfig = {min: 2};
-        var pool = new ConnectionPool(poolConfig, getConfig());
+        var pool = new ConnectionPool(poolConfig, connectionConfig);
 
         setTimeout(function() {
             assert.equal(pool.connections.length, poolConfig.min);
@@ -45,7 +49,7 @@ describe('ConnectionPool', function () {
         this.timeout(10000);
 
         var poolConfig = {min: 0, idleTimeout: 10};
-        var pool = new ConnectionPool(poolConfig, getConfig());
+        var pool = new ConnectionPool(poolConfig, connectionConfig);
 
         setTimeout(function() {
             assert.equal(pool.connections.length, 0);
@@ -77,7 +81,7 @@ describe('ConnectionPool', function () {
         this.timeout(10000);
 
         var poolConfig = {min: 2, max: 5};
-        var pool = new ConnectionPool(poolConfig, getConfig());
+        var pool = new ConnectionPool(poolConfig, connectionConfig);
 
         var count = 20;
         var run = 0;
@@ -116,7 +120,7 @@ describe('ConnectionPool', function () {
         this.timeout(10000);
 
         var poolConfig = { min: 5, max: 1, idleTimeout: 10};
-        var pool = new ConnectionPool(poolConfig, getConfig());
+        var pool = new ConnectionPool(poolConfig, connectionConfig);
 
         setTimeout(function() {
             assert.equal(pool.connections.length, 1);
@@ -148,7 +152,7 @@ describe('ConnectionPool', function () {
         this.timeout(10000);
 
         var poolConfig = {max: 1, idleTimeout: 10};
-        var pool = new ConnectionPool(poolConfig, getConfig());
+        var pool = new ConnectionPool(poolConfig, connectionConfig);
 
         setTimeout(function() {
             assert.equal(pool.connections.length, 1);
@@ -196,7 +200,7 @@ describe('ConnectionPool', function () {
 
         pool.on('error', function(err) {
             assert(!!err);
-            pool.connectionConfig = getConfig();
+            pool.connectionConfig = connectionConfig;
         });
 
         function testConnected() {
@@ -218,7 +222,7 @@ describe('ConnectionPool', function () {
         this.timeout(10000);
 
         var poolConfig = {min: 1, max: 1, acquireTimeout: 2000};
-        var pool = new ConnectionPool(poolConfig, getConfig());
+        var pool = new ConnectionPool(poolConfig, connectionConfig);
 
         pool.acquire(function(err, connection) {
             assert(!err);
@@ -235,7 +239,7 @@ describe('ConnectionPool', function () {
     it('idle timeout', function (done) {
         this.timeout(10000);
         var poolConfig = {min: 1, max: 5, idleTimeout: 100};
-        var pool = new ConnectionPool(poolConfig, getConfig());
+        var pool = new ConnectionPool(poolConfig, connectionConfig);
 
         setTimeout(function() {
             pool.acquire(function (err, connection) {
@@ -256,13 +260,9 @@ describe('ConnectionPool', function () {
         }, 300);
     });
 
-    it('lost connection handling', function (done) {
+    it('connection error handling', function (done) {
         this.timeout(10000);
         var poolConfig = {min: 1, max: 5};
-        var connectionConfig = getConfig();
-
-        connectionConfig.options = connectionConfig.options || {};
-        connectionConfig.options.requestTimeout = 5000;            
 
         var pool = new ConnectionPool(poolConfig, connectionConfig);
 
@@ -292,7 +292,6 @@ describe('ConnectionPool', function () {
 
             var request = new Request(command, function (err, rowCount) {
                 assert(err);
-                assert(err.code,'ETIMEOUT');
                 pool.drain(done);
             });
 
@@ -308,7 +307,7 @@ describe('ConnectionPool', function () {
         this.timeout(10000);
 
         var poolConfig = {max: 1};
-        var pool = new ConnectionPool(poolConfig, getConfig());
+        var pool = new ConnectionPool(poolConfig, connectionConfig);
 
         var createRequest = function(query, value, callback) {
             var request = new Request(query, function (err, rowCount) {
@@ -345,7 +344,7 @@ describe('ConnectionPool', function () {
         this.timeout(10000);
 
         var poolConfig = {min: 3};
-        var pool = new ConnectionPool(poolConfig, getConfig());
+        var pool = new ConnectionPool(poolConfig, connectionConfig);
 
         pool.acquire(function() { });
 
@@ -354,74 +353,4 @@ describe('ConnectionPool', function () {
             pool.drain(done);
         }, 4);
     });
-
-    it('request callback should be called on socket error', function (done) {
-        this.timeout(10000);
-
-        var poolConfig = {min: 1};
-
-        var connectionConfig = getConfig();
-        connectionConfig.options = connectionConfig.options || {};
-        connectionConfig.options.requestTimeout = 60000;    
-
-        var pool = new ConnectionPool(poolConfig, connectionConfig);
-
-        pool.acquire(function(err, conn) {             
-            var request = new Request("WAITFOR 00:00:30", function(err) {
-                assert(err);
-                assert.equal(err.message, 'socket error');
-                pool.drain(done);
-            });
-            conn.execSql(request);
-            conn.socket.emit('error', new Error('socket error'));
-        });
-        pool.on('error', function(err) {
-            assert.equal(err.code, 'ESOCKET');
-        });
-    });
-
-    it('connection should still work after socket error', function (done) {
-        this.timeout(10000);
-
-        var poolConfig = {min: 1, max: 1};
-
-        var connectionConfig = getConfig();
-        connectionConfig.options = connectionConfig.options || {};
-        connectionConfig.options.requestTimeout = 60000;    
-
-        var pool = new ConnectionPool(poolConfig, connectionConfig);
-
-        var createRequest = function(query, value, callback) {
-            var request = new Request(query, function (err, rowCount) {
-                assert.strictEqual(rowCount, 1);
-                callback();
-            });
-
-            request.on('row', function (columns) {
-                assert.strictEqual(columns[0].value, value);
-            });
-
-            return request;
-        };        
-
-        pool.acquire(function(err, conn) {             
-            var request = new Request("WAITFOR 00:00:30", function(err) {
-                assert(err);
-                assert.equal(err.message, 'socket error');
-                conn.release();
-                pool.acquire(function(err, conn) {
-                    assert(!err);
-                    conn.execSql(createRequest('SELECT 42', 42, function () {
-                        pool.drain(done);
-                    }));
-                });
-            });
-            conn.execSql(request);
-            conn.socket.emit('error', new Error('socket error'));
-        });
-        pool.on('error', function(err) {
-            assert.equal(err.code, 'ESOCKET');
-        });
-    });    
-
 });
