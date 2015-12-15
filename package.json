@@ -16,26 +16,20 @@
     "pool"
   ],
   "author": {
-    "name": "Mike D Pilsbury",
-    "email": "mike.pilsbury@gmail.com"
+    "name": "Ben Page",
+	"email": "ben.page@openreign.com"
   },
   "contributors": [
     {
       "name": "Ben Page",
       "email": "ben.page@openreign.com"
-    }
-  ],
-  "maintainers": [
+    },
     {
       "name": "Mike D Pilsbury",
       "email": "mike.pilsbury@gmail.com"
-    },
-    {
-      "name": "Ben Page",
-      "email": "ben.page@openreign.com"
     }
   ],
-  "licenses": "MIT",
+  "license": "MIT",
   "dependencies": {
     "tedious": "^1.13.0"
   },
