@@ -31,19 +31,27 @@ var connectionConfig = {
 //create the pool
 var pool = new ConnectionPool(poolConfig, connectionConfig);
 
+pool.on('error', function(err) {
+    console.error(err);
+});
+
 //acquire a connection
 pool.acquire(function (err, connection) {
-    if (err)
+    if (err) {
         console.error(err);
+        return;
+    }
 
-	//use the connection as normal
+    //use the connection as normal
     var request = new Request('select 42', function(err, rowCount) {
-        if (err)
+        if (err) {
             console.error(err);
+            return;
+        }
 
         console.log('rowCount: ' + rowCount);
 
-		//release the connection back to the pool when finished
+        //release the connection back to the pool when finished
         connection.release();
     });
 
@@ -52,10 +60,6 @@ pool.acquire(function (err, connection) {
     });
 
     connection.execSql(request);
-});
-
-pool.on('error', function(err) {
-    console.error(err);
 });
 ```
 
