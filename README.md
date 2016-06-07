@@ -96,7 +96,7 @@ Close all pooled connections and stop making new ones. The pool should be discar
  * `callback()` {Function} Callback function
 
 ### connectionPool.error {event}
-The 'error' event is emitted when a connection fails to connect to the SQL Server.
+The 'error' event is emitted when a connection fails to connect to the SQL Server. The pool simply will retries indefinitely. The application may want to handle errors in a more nuanced way.
 
 ## Class: Connection
 The following method is added to the Tedious [Connection](http://pekim.github.com/tedious/api-connection.html) object.
