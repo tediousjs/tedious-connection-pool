@@ -1,6 +1,7 @@
 var assert = require('assert');
 var Request = require('tedious').Request;
 var ConnectionPool = require('../lib/connection-pool');
+var Connection = require('tedious').Connection;
 
 var connectionConfig = {
     userName: 'test',
@@ -32,7 +33,27 @@ ALTER ROLE SQLAgentUserRole ADD MEMBER test
 ALTER LOGIN test DISABLE
 */
 
+describe('Name Collision', function () {
+
+    it('release', function () {
+        assert(!Connection.prototype.release);
+
+        var con = new Connection({});
+        assert(!con.release);
+        con.close();
+    });
+
+    it('pool', function () {
+        assert(!Connection.prototype.pool);
+
+        var con = new Connection({});
+        assert(!con.pool);
+        con.close();
+    });
+});
+
 describe('ConnectionPool', function () {
+
     it('min', function (done) {
         this.timeout(10000);
 

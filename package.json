@@ -40,5 +40,8 @@
   "bugs": {
     "url": "https://github.com/pekim/tedious-connection-pool/issues"
   },
-  "homepage": "https://github.com/pekim/tedious-connection-pool"
+  "homepage": "https://github.com/pekim/tedious-connection-pool",
+  "scripts": {
+    "test": "node_modules/.bin/mocha test/test.js"
+  }
 }
