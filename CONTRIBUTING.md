@@ -113,4 +113,4 @@ You agree to license your contribution under the terms of the MIT License
 https://opensource.org/licenses/MIT
 
 ## Notes
-Thanks to the [tedious-connection-pool](https://github.com/tedious-connection-pooljs/tedious-connection-pool) project for this excellent CONTRIBUTING.md file.
+Thanks to the [Flight](https://github.com/flightjs/flight) project for this excellent CONTRIBUTING.md file.
