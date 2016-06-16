@@ -107,6 +107,9 @@ Release the connect back to the pool to be used again
 ## Changelog
 
 ### Version 1.0.3
+* bug fix only
+
+### Version 1.0.3
 * Pool modifies the Tedious connection object rather than the Connection prototype.
 
 ### Version 1.0.2
