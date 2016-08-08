@@ -410,7 +410,7 @@ describe('Load Test', function() {
                 var data = statistics.linearRegression(mem);
                 //console.log(data.m);
                 if (data.m >= 0.025)
-                    done(new Error('Memory leak not detected.'));
+                    done(new Error('Memory leak detected.'));
                 else
                     done();
                 
@@ -470,7 +470,7 @@ describe('Load Test', function() {
                                 var data = statistics.linearRegression(mem);
                                 //console.log(data.m);
                                 if (data.m >= 0.025)
-                                    end(new Error('Memory leak not detected.'));
+                                    end(new Error('Memory leak detected.'));
                                 else
                                     end();
                             } else {
