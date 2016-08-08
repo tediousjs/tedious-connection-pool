@@ -380,7 +380,7 @@ describe('ConnectionPool', function () {
 describe('Load Test', function() {
     var statistics = require('simple-statistics');
     
-    it('Memory Leak Detection', function(done) {
+    it('Memory Leak Detection - Connection Error', function(done) {
         this.timeout(60000);
         if (!global.gc)
             throw new Error('must run nodejs with --expose-gc');
@@ -389,24 +389,24 @@ describe('Load Test', function() {
         var groupCount = 20;
         var poolSize = 1000;
         var max = poolSize * groupCount;
-    
+        
         var pool = new ConnectionPool({ max: poolSize, min: poolSize, retryDelay: 1}, {
             userName: 'testLogin',
             password: 'wrongPassword',
             server: 'localhost'
         });
-    
+        
         pool.on('error', function() {
             if ((++count % poolSize) !== 0)
                 return;
-        
+            
             global.gc();
-        
+            
             var heapUsedKB = Math.round(process.memoryUsage().heapUsed / 1024);
             mem.push([count, heapUsedKB]);
-        
+            
             console.log(count + ': ' + heapUsedKB + 'KB');
-        
+            
             if (count === max) {
                 var data = statistics.linearRegression(mem);
                 //console.log(data.m);
@@ -414,9 +414,80 @@ describe('Load Test', function() {
                     done(new Error('Memory leak not detected.'));
                 else
                     done();
-            
+                
                 pool.drain();
             }
         });
+    });
+    
+    it('Memory Leak Detection - acquire() and Request', function(done) {
+        this.timeout(60000);
+        if (!global.gc)
+            throw new Error('must run nodejs with --expose-gc');
+    
+        var poolConfig = {min: 67, max: 123};
+        var pool = new ConnectionPool(poolConfig, {
+            userName: 'test',
+            password: 'test',
+            server: 'dev1'
+        });
+    
+        var clients = 1000;
+        var connections = 100;
+        var max = clients * connections;
+        var mem = [];
+    
+        for (var i = 0; i < clients; i++)
+            createClient();
+    
+        var count = 0;
+    
+        function end(err) {
+            done(err);
+            pool.drain();
+        }
+    
+        function createClient() {
+            var clientCount = 0;
+        
+            function createRequest() {
+                pool.acquire(function(err, connection) {
+                    if (err)
+                        return end(err);
+                
+                    var request = new Request('select 42', function (err) {
+                        if (err)
+                            return end(err);
+                    
+                        connection.release();
+                    
+                        if (++clientCount < connections)
+                            createRequest();
+                    
+                        if ((++count % 1000) === 0) {
+                            global.gc();
+                        
+                            if (count === max) {
+                                var data = statistics.linearRegression(mem);
+                                //console.log(data.m);
+                                if (data.m >= 0.025)
+                                    end(new Error('Memory leak not detected.'));
+                                else
+                                    end();
+                            } else {
+                                var heapUsedKB = Math.round(process.memoryUsage().heapUsed / 1024);
+                                mem.push([count, heapUsedKB]);
+                            
+                                console.log(count + ': ' + heapUsedKB + 'KB');
+                            }
+                        }
+                    });
+                
+                    connection.execSql(request);
+                });
+            }
+        
+            createRequest();
+        }
     });
 });
