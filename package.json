@@ -4,7 +4,7 @@
   "description": "Connection Pool for tedious.",
   "main": "lib/connection-pool.js",
   "scripts": {
-    "test": "node_modules/.bin/mocha test/test.js"
+    "test": "node_modules/.bin/mocha --expose-gc test/test.js"
   },
   "repository": {
     "type": "git",

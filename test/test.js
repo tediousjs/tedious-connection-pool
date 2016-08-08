@@ -404,8 +404,7 @@ describe('Load Test', function() {
             
             var heapUsedKB = Math.round(process.memoryUsage().heapUsed / 1024);
             mem.push([count, heapUsedKB]);
-            
-            console.log(count + ': ' + heapUsedKB + 'KB');
+            // console.log(count + ': ' + heapUsedKB + 'KB');
             
             if (count === max) {
                 var data = statistics.linearRegression(mem);
@@ -477,8 +476,7 @@ describe('Load Test', function() {
                             } else {
                                 var heapUsedKB = Math.round(process.memoryUsage().heapUsed / 1024);
                                 mem.push([count, heapUsedKB]);
-                            
-                                console.log(count + ': ' + heapUsedKB + 'KB');
+                                // console.log(count + ': ' + heapUsedKB + 'KB');
                             }
                         }
                     });
