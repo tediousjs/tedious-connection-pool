@@ -1,6 +1,8 @@
 # tedious-connection-pool
 A connection pool for [tedious](http://github.com/pekim/tedious).
 
+[![Build status](https://ci.appveyor.com/api/projects/status/jnurb48ao1wrbgbr?svg=true)](https://ci.appveyor.com/project/ben-page/tedious-connection-pool)
+
 ## Installation
 
     npm install tedious-connection-pool
