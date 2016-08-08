@@ -4,15 +4,35 @@ var Request = require('tedious').Request;
 var ConnectionPool = require('../lib/connection-pool');
 var Connection = require('tedious').Connection;
 
-var connectionConfig = {
-    userName: 'test',
-    password: 'test',
-    server: 'dev1',
-    options: {
-        appName: 'pool-test',
-        database: 'test'
-    }
-};
+var connectionConfig, timeout;
+
+if (process.env.APPVEYOR) {
+    timeout = 30000;
+    connectionConfig = {
+        server: 'localhost',
+        userName: 'sa',
+        password: 'Password12!',
+        options: {
+            appName: 'pool-test',
+            database: 'master',
+            requestTimeout: 25000,
+            cryptoCredentialsDetails: {
+                ciphers: 'RC4-MD5'
+            }
+        }
+    };
+} else {
+    timeout = 10000;
+    connectionConfig = {
+        userName: 'test',
+        password: 'test',
+        server: 'dev1',
+        options: {
+            appName: 'pool-test',
+            database: 'test'
+        }
+    };
+}
 
 /* create a db user with the correct permissions:
 CREATE DATABASE test
@@ -56,7 +76,7 @@ describe('Name Collision', function () {
 describe('ConnectionPool', function () {
 
     it('min', function (done) {
-        this.timeout(10000);
+        this.timeout(timeout);
 
         var poolConfig = {min: 2};
         var pool = new ConnectionPool(poolConfig, connectionConfig);
@@ -68,7 +88,7 @@ describe('ConnectionPool', function () {
     });
 
     it('min=0', function (done) {
-        this.timeout(10000);
+        this.timeout(timeout);
 
         var poolConfig = {min: 0, idleTimeout: 10};
         var pool = new ConnectionPool(poolConfig, connectionConfig);
@@ -100,7 +120,7 @@ describe('ConnectionPool', function () {
     });
 
     it('max', function (done) {
-        this.timeout(10000);
+        this.timeout(timeout);
 
         var poolConfig = {min: 2, max: 5};
         var pool = new ConnectionPool(poolConfig, connectionConfig);
@@ -139,7 +159,7 @@ describe('ConnectionPool', function () {
     });
 
     it('min<=max, min specified > max specified', function (done) {
-        this.timeout(10000);
+        this.timeout(timeout);
 
         var poolConfig = { min: 5, max: 1, idleTimeout: 10};
         var pool = new ConnectionPool(poolConfig, connectionConfig);
@@ -171,7 +191,7 @@ describe('ConnectionPool', function () {
     });
 
     it('min<=max, no min specified', function (done) {
-        this.timeout(10000);
+        this.timeout(timeout);
 
         var poolConfig = {max: 1, idleTimeout: 10};
         var pool = new ConnectionPool(poolConfig, connectionConfig);
@@ -203,7 +223,7 @@ describe('ConnectionPool', function () {
     });
 
     it('pool error event', function (done) {
-        this.timeout(10000);
+        this.timeout(timeout);
         var poolConfig = {min: 3};
         var pool = new ConnectionPool(poolConfig, {});
 
@@ -216,7 +236,7 @@ describe('ConnectionPool', function () {
     });
 
     it('connection retry', function (done) {
-        this.timeout(10000);
+        this.timeout(timeout);
         var poolConfig = {min: 1, max: 5, retryDelay: 5};
         var pool = new ConnectionPool(poolConfig, {});
 
@@ -241,7 +261,7 @@ describe('ConnectionPool', function () {
     });
 
     it('acquire timeout', function (done) {
-        this.timeout(10000);
+        this.timeout(timeout);
 
         var poolConfig = {min: 1, max: 1, acquireTimeout: 2000};
         var pool = new ConnectionPool(poolConfig, connectionConfig);
@@ -259,7 +279,7 @@ describe('ConnectionPool', function () {
     });
 
     it('idle timeout', function (done) {
-        this.timeout(10000);
+        this.timeout(timeout);
         var poolConfig = {min: 1, max: 5, idleTimeout: 100};
         var pool = new ConnectionPool(poolConfig, connectionConfig);
 
@@ -283,7 +303,7 @@ describe('ConnectionPool', function () {
     });
 
     it('connection error handling', function (done) {
-        this.timeout(10000);
+        this.timeout(timeout);
         var poolConfig = {min: 1, max: 5};
 
         var pool = new ConnectionPool(poolConfig, connectionConfig);
@@ -326,7 +346,7 @@ describe('ConnectionPool', function () {
     });
 
     it('release(), reset()', function (done) {
-        this.timeout(10000);
+        this.timeout(timeout);
 
         var poolConfig = {max: 1};
         var pool = new ConnectionPool(poolConfig, connectionConfig);
@@ -363,7 +383,7 @@ describe('ConnectionPool', function () {
     });
 
     it('drain', function (done) {
-        this.timeout(10000);
+        this.timeout(timeout);
 
         var poolConfig = {min: 3};
         var pool = new ConnectionPool(poolConfig, connectionConfig);
@@ -377,115 +397,117 @@ describe('ConnectionPool', function () {
     });
 });
 
-describe('Load Test', function() {
-    var statistics = require('simple-statistics');
-    
-    it('Memory Leak Detection - Connection Error', function(done) {
-        this.timeout(60000);
-        if (!global.gc)
-            throw new Error('must run nodejs with --expose-gc');
-        var count = 0;
-        var mem = [];
-        var groupCount = 20;
-        var poolSize = 1000;
-        var max = poolSize * groupCount;
+if (!process.env.APPVEYOR) {
+    describe('Load Test', function () {
+        var statistics = require('simple-statistics');
         
-        var pool = new ConnectionPool({ max: poolSize, min: poolSize, retryDelay: 1}, {
-            userName: 'testLogin',
-            password: 'wrongPassword',
-            server: 'localhost'
+        it('Memory Leak Detection - Connection Error', function (done) {
+            this.timeout(60000);
+            if (!global.gc)
+                throw new Error('must run nodejs with --expose-gc');
+            var count = 0;
+            var mem = [];
+            var groupCount = 20;
+            var poolSize = 1000;
+            var max = poolSize * groupCount;
+            
+            var pool = new ConnectionPool({max: poolSize, min: poolSize, retryDelay: 1}, {
+                userName: 'testLogin',
+                password: 'wrongPassword',
+                server: 'localhost'
+            });
+            
+            pool.on('error', function () {
+                if ((++count % poolSize) !== 0)
+                    return;
+                
+                global.gc();
+                
+                var heapUsedKB = Math.round(process.memoryUsage().heapUsed / 1024);
+                mem.push([count, heapUsedKB]);
+                // console.log(count + ': ' + heapUsedKB + 'KB');
+                
+                if (count === max) {
+                    var data = statistics.linearRegression(mem);
+                    //console.log(data.m);
+                    if (data.m >= 0.025)
+                        done(new Error('Memory leak detected.'));
+                    else
+                        done();
+                    
+                    pool.drain();
+                }
+            });
         });
         
-        pool.on('error', function() {
-            if ((++count % poolSize) !== 0)
-                return;
+        it('Memory Leak Detection - acquire() and Request', function (done) {
+            this.timeout(60000);
+            if (!global.gc)
+                throw new Error('must run nodejs with --expose-gc');
             
-            global.gc();
+            var poolConfig = {min: 67, max: 123};
+            var pool = new ConnectionPool(poolConfig, {
+                userName: 'test',
+                password: 'test',
+                server: 'dev1'
+            });
             
-            var heapUsedKB = Math.round(process.memoryUsage().heapUsed / 1024);
-            mem.push([count, heapUsedKB]);
-            // console.log(count + ': ' + heapUsedKB + 'KB');
+            var clients = 1000;
+            var connections = 100;
+            var max = clients * connections;
+            var mem = [];
             
-            if (count === max) {
-                var data = statistics.linearRegression(mem);
-                //console.log(data.m);
-                if (data.m >= 0.025)
-                    done(new Error('Memory leak detected.'));
-                else
-                    done();
-                
+            for (var i = 0; i < clients; i++)
+                createClient();
+            
+            var count = 0;
+            
+            function end(err) {
+                done(err);
                 pool.drain();
             }
-        });
-    });
-    
-    it('Memory Leak Detection - acquire() and Request', function(done) {
-        this.timeout(60000);
-        if (!global.gc)
-            throw new Error('must run nodejs with --expose-gc');
-    
-        var poolConfig = {min: 67, max: 123};
-        var pool = new ConnectionPool(poolConfig, {
-            userName: 'test',
-            password: 'test',
-            server: 'dev1'
-        });
-    
-        var clients = 1000;
-        var connections = 100;
-        var max = clients * connections;
-        var mem = [];
-    
-        for (var i = 0; i < clients; i++)
-            createClient();
-    
-        var count = 0;
-    
-        function end(err) {
-            done(err);
-            pool.drain();
-        }
-    
-        function createClient() {
-            var clientCount = 0;
-        
-            function createRequest() {
-                pool.acquire(function(err, connection) {
-                    if (err)
-                        return end(err);
+            
+            function createClient() {
+                var clientCount = 0;
                 
-                    var request = new Request('select 42', function (err) {
+                function createRequest() {
+                    pool.acquire(function (err, connection) {
                         if (err)
                             return end(err);
-                    
-                        connection.release();
-                    
-                        if (++clientCount < connections)
-                            createRequest();
-                    
-                        if ((++count % 1000) === 0) {
-                            global.gc();
                         
-                            if (count === max) {
-                                var data = statistics.linearRegression(mem);
-                                //console.log(data.m);
-                                if (data.m >= 0.025)
-                                    end(new Error('Memory leak detected.'));
-                                else
-                                    end();
-                            } else {
-                                var heapUsedKB = Math.round(process.memoryUsage().heapUsed / 1024);
-                                mem.push([count, heapUsedKB]);
-                                // console.log(count + ': ' + heapUsedKB + 'KB');
+                        var request = new Request('select 42', function (err) {
+                            if (err)
+                                return end(err);
+                            
+                            connection.release();
+                            
+                            if (++clientCount < connections)
+                                createRequest();
+                            
+                            if ((++count % 1000) === 0) {
+                                global.gc();
+                                
+                                if (count === max) {
+                                    var data = statistics.linearRegression(mem);
+                                    //console.log(data.m);
+                                    if (data.m >= 0.025)
+                                        end(new Error('Memory leak not detected.'));
+                                    else
+                                        end();
+                                } else {
+                                    var heapUsedKB = Math.round(process.memoryUsage().heapUsed / 1024);
+                                    mem.push([count, heapUsedKB]);
+                                    // console.log(count + ': ' + heapUsedKB + 'KB');
+                                }
                             }
-                        }
+                        });
+                        
+                        connection.execSql(request);
                     });
+                }
                 
-                    connection.execSql(request);
-                });
+                createRequest();
             }
-        
-            createRequest();
-        }
+        });
     });
-});
+}
