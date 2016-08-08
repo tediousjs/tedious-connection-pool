@@ -34,7 +34,8 @@
     "tedious": "^1.14.0"
   },
   "devDependencies": {
-    "mocha": ">=1.6.0"
+    "mocha": ">=1.6.0",
+    "simple-statistics": "^2.1.0"
   },
   "readmeFilename": "README.md",
   "bugs": {
