@@ -1,3 +1,4 @@
+'use strict';
 var assert = require('assert');
 var Request = require('tedious').Request;
 var ConnectionPool = require('../lib/connection-pool');
@@ -373,5 +374,49 @@ describe('ConnectionPool', function () {
             assert.equal(pool.connections.length, poolConfig.min);
             pool.drain(done);
         }, 4);
+    });
+});
+
+describe('Load Test', function() {
+    var statistics = require('simple-statistics');
+    
+    it('Memory Leak Detection', function(done) {
+        this.timeout(60000);
+        if (!global.gc)
+            throw new Error('must run nodejs with --expose-gc');
+        var count = 0;
+        var mem = [];
+        var groupCount = 20;
+        var poolSize = 1000;
+        var max = poolSize * groupCount;
+    
+        var pool = new ConnectionPool({ max: poolSize, min: poolSize, retryDelay: 1}, {
+            userName: 'testLogin',
+            password: 'wrongPassword',
+            server: 'localhost'
+        });
+    
+        pool.on('error', function() {
+            if ((++count % poolSize) !== 0)
+                return;
+        
+            global.gc();
+        
+            var heapUsedKB = Math.round(process.memoryUsage().heapUsed / 1024);
+            mem.push([count, heapUsedKB]);
+        
+            console.log(count + ': ' + heapUsedKB + 'KB');
+        
+            if (count === max) {
+                var data = statistics.linearRegression(mem);
+                //console.log(data.m);
+                if (data.m >= 0.025)
+                    done(new Error('Memory leak not detected.'));
+                else
+                    done();
+            
+                pool.drain();
+            }
+        });
     });
 });
