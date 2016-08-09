@@ -1,3 +1,6 @@
+### Version 1.0.5
+* no changes. published to update npm docs
+
 ### Version 1.0.4
 * bug fix only
 
