@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <link href='https://fonts.googleapis.com/css?family=Chivo:900' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-dark.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <title>Tedious-connection-pool by tediousjs</title>
+  </head>
+
+  <body>
+    <div id="container">
+      <div class="inner">
+
+        <header>
+          <h1>Tedious-connection-pool</h1>
+          <h2>A connection pool implementation for tedious</h2>
+        </header>
+
+        <section id="downloads" class="clearfix">
+          <a href="https://github.com/tediousjs/tedious-connection-pool/zipball/master" id="download-zip" class="button"><span>Download .zip</span></a>
+          <a href="https://github.com/tediousjs/tedious-connection-pool/tarball/master" id="download-tar-gz" class="button"><span>Download .tar.gz</span></a>
+          <a href="https://github.com/tediousjs/tedious-connection-pool" id="view-on-github" class="button"><span>View on GitHub</span></a>
+        </section>
+
+        <hr>
+
+        <section id="main_content">
+          <h1>
+<a id="tedious-connection-pool" class="anchor" href="#tedious-connection-pool" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>tedious-connection-pool</h1>
+
+<p><a href="https://david-dm.org/tediousjs/tedious-connection-pool"><img src="https://david-dm.org/tediousjs/tedious-connection-pool.svg" alt="Dependency Status"></a>
+<a href="https://badge.fury.io/js/tedious-connection-pool"><img src="https://badge.fury.io/js/tedious-connection-pool.svg" alt="npm version"></a>
+<a href="https://ci.appveyor.com/project/ben-page/tedious-connection-pool"><img src="https://ci.appveyor.com/api/projects/status/jnurb48ao1wrbgbr?svg=true" alt="Build status"></a></p>
+
+<p>A connection pool for <a href="http://github.com/tediousjs/tedious">tedious</a>.</p>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<pre><code>npm install tedious-connection-pool
+</code></pre>
+
+<h2>
+<a id="description" class="anchor" href="#description" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Description</h2>
+
+<p>The only difference from the regular tedious API is how the connection is obtained and released. Rather than creating a connection and then closing it when finished, acquire a connection from the pool and release it when finished. Releasing resets the connection and makes in available for another use.</p>
+
+<p>Once the Tedious Connection object has been acquired, the tedious API can be used with the connection as normal.</p>
+
+<h2>
+<a id="example" class="anchor" href="#example" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Example</h2>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> ConnectionPool <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>tedious-connection-pool<span class="pl-pds">'</span></span>);
+<span class="pl-k">var</span> Request <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>tedious<span class="pl-pds">'</span></span>).<span class="pl-smi">Request</span>;
+
+<span class="pl-k">var</span> poolConfig <span class="pl-k">=</span> {
+    min<span class="pl-k">:</span> <span class="pl-c1">2</span>,
+    max<span class="pl-k">:</span> <span class="pl-c1">4</span>,
+    log<span class="pl-k">:</span> <span class="pl-c1">true</span>
+};
+
+<span class="pl-k">var</span> connectionConfig <span class="pl-k">=</span> {
+    userName<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>login<span class="pl-pds">'</span></span>,
+    password<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>password<span class="pl-pds">'</span></span>,
+    server<span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>localhost<span class="pl-pds">'</span></span>
+};
+
+<span class="pl-c">//create the pool</span>
+<span class="pl-k">var</span> pool <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">ConnectionPool</span>(poolConfig, connectionConfig);
+
+<span class="pl-smi">pool</span>.<span class="pl-en">on</span>(<span class="pl-s"><span class="pl-pds">'</span>error<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>) {
+    <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+});
+
+<span class="pl-c">//acquire a connection</span>
+<span class="pl-smi">pool</span>.<span class="pl-en">acquire</span>(<span class="pl-k">function</span> (<span class="pl-smi">err</span>, <span class="pl-smi">connection</span>) {
+    <span class="pl-k">if</span> (err) {
+        <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+        <span class="pl-k">return</span>;
+    }
+
+    <span class="pl-c">//use the connection as normal</span>
+    <span class="pl-k">var</span> request <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Request</span>(<span class="pl-s"><span class="pl-pds">'</span>select 42<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">err</span>, <span class="pl-smi">rowCount</span>) {
+        <span class="pl-k">if</span> (err) {
+            <span class="pl-en">console</span>.<span class="pl-c1">error</span>(err);
+            <span class="pl-k">return</span>;
+        }
+
+        <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>rowCount: <span class="pl-pds">'</span></span> <span class="pl-k">+</span> rowCount);
+
+        <span class="pl-c">//release the connection back to the pool when finished</span>
+        <span class="pl-smi">connection</span>.<span class="pl-en">release</span>();
+    });
+
+    <span class="pl-smi">request</span>.<span class="pl-en">on</span>(<span class="pl-s"><span class="pl-pds">'</span>row<span class="pl-pds">'</span></span>, <span class="pl-k">function</span>(<span class="pl-smi">columns</span>) {
+        <span class="pl-en">console</span>.<span class="pl-c1">log</span>(<span class="pl-s"><span class="pl-pds">'</span>value: <span class="pl-pds">'</span></span> <span class="pl-k">+</span> columns[<span class="pl-c1">0</span>].<span class="pl-c1">value</span>);
+    });
+
+    <span class="pl-smi">connection</span>.<span class="pl-en">execSql</span>(request);
+});</pre></div>
+
+<p>When you are finished with the pool, you can drain it (close all connections).</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">pool</span>.<span class="pl-en">drain</span>();</pre></div>
+
+<h2>
+<a id="class-connectionpool" class="anchor" href="#class-connectionpool" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Class: ConnectionPool</h2>
+
+<h3>
+<a id="new-connectionpoolpoolconfig-connectionconfig" class="anchor" href="#new-connectionpoolpoolconfig-connectionconfig" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>new ConnectionPool(poolConfig, connectionConfig)</h3>
+
+<ul>
+<li>
+<p><code>poolConfig</code> {Object} the pool configuration object</p>
+
+<ul>
+<li>
+<code>min</code> {Number} The minimun of connections there can be in the pool. Default = <code>10</code>
+</li>
+<li>
+<code>max</code> {Number} The maximum number of connections there can be in the pool. Default = <code>50</code>
+</li>
+<li>
+<code>idleTimeout</code> {Number} The number of milliseconds before closing an unused connection. Default = <code>300000</code>
+</li>
+<li>
+<code>retryDelay</code> {Number} The number of milliseconds to wait after a connection fails, before trying again. Default = <code>5000</code>
+</li>
+<li>
+<code>acquireTimeout</code> {Number} The number of milliseconds to wait for a connection, before returning an error. Default = <code>60000</code>
+</li>
+<li>
+<code>log</code> {Boolean|Function} Set to true to have debug log written to the console or pass a function to receive the log messages. Default = <code>undefined</code>
+</li>
+</ul>
+</li>
+<li><p><code>connectionConfig</code> {Object} The same configuration that would be used to <a href="https://tediousjs.github.io/tedious/api-connection.html#function_newConnection">create a
+tedious Connection</a>.</p></li>
+</ul>
+
+<h3>
+<a id="connectionpoolacquirecallback" class="anchor" href="#connectionpoolacquirecallback" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>connectionPool.acquire(callback)</h3>
+
+<p>Acquire a Tedious Connection object from the pool.</p>
+
+<ul>
+<li>
+<code>callback(err, connection)</code> {Function} Callback function
+
+<ul>
+<li>
+<code>err</code> {Object} An Error object is an error occurred trying to acquire a connection, otherwise null.</li>
+<li>
+<code>connection</code> {Object} A <a href="https://tediousjs.github.io/tedious/api-connection.html">Connection</a>
+</li>
+</ul>
+</li>
+</ul>
+
+<h3>
+<a id="connectionpooldraincallback" class="anchor" href="#connectionpooldraincallback" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>connectionPool.drain(callback)</h3>
+
+<p>Close all pooled connections and stop making new ones. The pool should be discarded after it has been drained.</p>
+
+<ul>
+<li>
+<code>callback()</code> {Function} Callback function</li>
+</ul>
+
+<h3>
+<a id="connectionpoolerror-event" class="anchor" href="#connectionpoolerror-event" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>connectionPool.error {event}</h3>
+
+<p>The 'error' event is emitted when a connection fails to connect to the SQL Server. The pool will simply retry indefinitely. The application may want to handle errors in a more nuanced way.</p>
+
+<h2>
+<a id="class-connection" class="anchor" href="#class-connection" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Class: Connection</h2>
+
+<p>The following method is added to the Tedious <a href="https://tediousjs.github.io/tedious/api-connection.html">Connection</a> object.</p>
+
+<h3>
+<a id="connectionrelease" class="anchor" href="#connectionrelease" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Connection.release()</h3>
+
+<p>Release the connect back to the pool to be used again</p>
+        </section>
+
+        <footer>
+          Tedious-connection-pool is maintained by <a href="https://github.com/tediousjs">tediousjs</a><br>
+          This page was generated by <a href="https://pages.github.com">GitHub Pages</a>. Tactile theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.
+        </footer>
+
+        
+      </div>
+    </div>
+  </body>
+</html>
