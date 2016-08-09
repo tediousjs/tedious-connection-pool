@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/pekim/tedious-connection-pool.git"
+    "url": "git://github.com/tediousjs/tedious-connection-pool.git"
   },
   "keywords": [
     "tedious",
@@ -40,7 +40,7 @@
   },
   "readmeFilename": "README.md",
   "bugs": {
-    "url": "https://github.com/pekim/tedious-connection-pool/issues"
+    "url": "https://github.com/tediousjs/tedious-connection-pool/issues"
   },
-  "homepage": "https://github.com/pekim/tedious-connection-pool"
+  "homepage": "https://github.com/tediousjs/tedious-connection-pool"
 }
